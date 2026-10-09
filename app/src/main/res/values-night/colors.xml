@@ -1,0 +1,5 @@
+<resources>
+    <color name="canvas">#101714</color>
+    <color name="accent">#91D5B2</color>
+    <bool name="light_system_bars">false</bool>
+</resources>

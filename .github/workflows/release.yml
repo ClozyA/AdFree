@@ -1,0 +1,103 @@
+name: Release APKs
+
+on:
+  push:
+    tags: ['v*']
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.ref_type == 'tag'
+    runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+      - name: Check version tag
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = [regex]::Match((Get-Content app/build.gradle.kts -Raw), 'versionName = "([^"]+)"').Groups[1].Value
+          if ($env:GITHUB_REF_NAME -ne "v$version") { throw "Tag must match versionName: v$version" }
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Expected a numeric release version.' }
+          "ADFREE_VERSION=$version" >> $env:GITHUB_ENV
+      - name: Prepare Android SDK
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $manager = Join-Path $env:ANDROID_HOME 'cmdline-tools/latest/lib/sdkmanager-classpath.jar'
+          if (!(Test-Path $manager)) { throw 'Android SDK command-line tools are missing.' }
+          & java -classpath $manager com.android.sdklib.tool.sdkmanager.SdkManagerCli --sdk_root=$env:ANDROID_HOME 'platforms;android-37' 'build-tools;37.0.0' 'platform-tools'
+          if ($LASTEXITCODE -ne 0) { throw 'Android SDK installation failed.' }
+      - name: Restore signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ADFREE_KEYSTORE_BASE64 }}
+          ADFREE_KEYSTORE_PASSWORD: ${{ secrets.ADFREE_KEYSTORE_PASSWORD }}
+          ADFREE_KEY_ALIAS: ${{ secrets.ADFREE_KEY_ALIAS }}
+          ADFREE_KEY_PASSWORD: ${{ secrets.ADFREE_KEY_PASSWORD }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          foreach ($name in @('KEYSTORE_BASE64','ADFREE_KEYSTORE_PASSWORD','ADFREE_KEY_ALIAS','ADFREE_KEY_PASSWORD')) {
+            if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) { throw "Missing signing secret: $name" }
+          }
+          $storePath = Join-Path $env:RUNNER_TEMP 'adfree-release.p12'
+          [IO.File]::WriteAllBytes($storePath, [Convert]::FromBase64String($env:KEYSTORE_BASE64))
+          "ADFREE_KEYSTORE_PATH=$storePath" >> $env:GITHUB_ENV
+      - name: Test, lint and build
+        env:
+          ADFREE_KEYSTORE_PASSWORD: ${{ secrets.ADFREE_KEYSTORE_PASSWORD }}
+          ADFREE_KEY_ALIAS: ${{ secrets.ADFREE_KEY_ALIAS }}
+          ADFREE_KEY_PASSWORD: ${{ secrets.ADFREE_KEY_PASSWORD }}
+        run: |
+          & ./gradlew.ps1 :app:testDebugUnitTest :app:lintDebug :app:assembleRelease :app:assembleDebug --no-daemon --console=plain
+          if ($LASTEXITCODE -ne 0) { throw 'Gradle verification failed.' }
+          & ./scripts/package.ps1 -Version $env:ADFREE_VERSION
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: AdFree-${{ env.ADFREE_VERSION }}
+          path: |
+            dist/*.apk
+            dist/SHA256SUMS
+            app/build/outputs/mapping/release/mapping.txt
+          if-no-files-found: error
+          retention-days: 14
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tag = $env:GITHUB_REF_NAME
+          $assets = @(Get-ChildItem dist -File | Where-Object { $_.Extension -eq '.apk' -or $_.Name -eq 'SHA256SUMS' } | ForEach-Object FullName)
+          & gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -eq 0) {
+            & gh release upload $tag @assets --repo $env:GITHUB_REPOSITORY --clobber
+          } else {
+            $notes = "docs/releases/$env:ADFREE_VERSION.md"
+            $arguments = @('release', 'create', $tag) + $assets + @('--repo', $env:GITHUB_REPOSITORY, '--verify-tag', '--title', "AdFree $env:ADFREE_VERSION")
+            if (Test-Path $notes) { $arguments += @('--notes-file', $notes) } else { $arguments += '--generate-notes' }
+            & gh @arguments
+          }
+          if ($LASTEXITCODE -ne 0) { throw 'GitHub release publication failed.' }
+      - name: Remove temporary signing key
+        if: always()
+        run: |
+          $storePath = Join-Path $env:RUNNER_TEMP 'adfree-release.p12'
+          if (Test-Path -LiteralPath $storePath) { Remove-Item -LiteralPath $storePath -Force }

@@ -1,0 +1,4 @@
+ADFREE_KEYSTORE_PATH=signing/adfree-release.p12
+ADFREE_KEYSTORE_PASSWORD=replace-me
+ADFREE_KEY_ALIAS=adfree
+ADFREE_KEY_PASSWORD=replace-me
