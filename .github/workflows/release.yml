@@ -89,6 +89,8 @@ jobs:
           & gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
           if ($LASTEXITCODE -eq 0) {
             & gh release upload $tag @assets --repo $env:GITHUB_REPOSITORY --clobber
+            if ($LASTEXITCODE -ne 0) { throw 'GitHub release asset upload failed.' }
+            & gh release edit $tag --repo $env:GITHUB_REPOSITORY --draft=false --latest
           } else {
             $notes = "docs/releases/$env:ADFREE_VERSION.md"
             $arguments = @('release', 'create', $tag) + $assets + @('--repo', $env:GITHUB_REPOSITORY, '--verify-tag', '--title', "AdFree $env:ADFREE_VERSION")
