@@ -4,6 +4,14 @@
 
 [下载最新版本](https://github.com/ClozyA/AdFree/releases/latest)
 
+界面通过「首页」「设置」两个 Tab 切换：首页展示连接概览和适配应用，设置页提供日志管理、刷新连接、复制环境信息与版本更新。
+
+设置页「版本更新」可手动检查 GitHub 最新正式版，有更新时可前往对应 Release 页面下载 APK。更新源仅为 GitHub；网络失败或请求受限时会提示重试，也可直接打开发布页面查看。
+
+「保存日志」默认开启，保存 AdFree 运行日志及模块在两个目标应用中输出的 Hook 日志，文件位于应用私有目录，最多保留 3 个 512 KiB 文件并自动轮转。关闭后停止保存新日志，已有日志仍可导出。「导出日志」通过系统文件选择器保存 UTF-8 文本，包含当前环境信息与已保存日志，无需存储权限。
+
+升级后请完全退出并重启目标应用，以加载日志收集代码并记录完整启动过程。Hook 日志通过仅允许 AdFree 与两个目标应用写入的入口收集，不能通过该入口读取或删除文件；原有 LSPosed 日志继续输出。收集采用有限队列，队列满或跨进程写入失败时可能丢弃条目，完整性及系统后台启动限制仍需真机验证。
+
 ## 安装
 
 1. 安装 Release APK；Debug APK 用于排查问题。
@@ -45,7 +53,7 @@ $env:ANDROID_HOME = '你的 Android SDK 目录'
 
 ```powershell
 ./gradlew.ps1 :app:assembleRelease :app:assembleDebug
-./scripts/package.ps1 -Version 0.10.0
+./scripts/package.ps1 -Version 0.11.0
 ```
 
 产物位于 `dist/`，包含 Release、Debug 和 `SHA256SUMS`。Release 启用 R8 和资源裁剪，缺少签名配置会阻止发布打包。
@@ -60,8 +68,8 @@ GitHub Secrets 需配置：
 更新 `app/build.gradle.kts` 的 `versionCode` 和 `versionName`，可在 `docs/releases/<版本>.md` 编写说明，然后推送匹配的版本标签：
 
 ```powershell
-git tag v0.10.0
-git push origin v0.10.0
+git tag v0.11.0
+git push origin v0.11.0
 ```
 
 工作流在 Windows / PowerShell 7 中运行单元测试、lint、两种构建、签名验证和 SHA-256 计算，然后发布两种 APK。Android 17 的 SDK 平台包名为 `platforms;android-37.0`。也支持在 GitHub 创建已发布的 Release，或从主分支手动运行工作流并输入已有版本标签。

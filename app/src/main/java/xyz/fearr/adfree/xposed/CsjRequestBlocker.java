@@ -46,7 +46,7 @@ final class CsjRequestBlocker {
                 }
                 return manager;
             });
-            framework.log(Log.INFO, "AdFree", "Aggressive CSJ manager watch installed");
+            HookLog.log(framework, Log.INFO, "AdFree", "Aggressive CSJ manager watch installed");
         } catch (ReflectiveOperationException | RuntimeException | LinkageError error) {
             warn("entry", error);
         }
@@ -85,7 +85,7 @@ final class CsjRequestBlocker {
                 continue;
             framework.hook(request).setExceptionMode(XposedInterface.ExceptionMode.PASSTHROUGH).intercept(chain -> {
                 synchronized (logged) {
-                    if (logged.add(request)) framework.log(Log.INFO, "AdFree",
+                    if (logged.add(request)) HookLog.log(framework, Log.INFO, "AdFree",
                             "Aggressive CSJ request blocked: " + request.getName() + "; no callback, no reward");
                 }
                 return null;
@@ -93,10 +93,10 @@ final class CsjRequestBlocker {
             hooked.add(request);
             count++;
         }
-        framework.log(Log.INFO, "AdFree", "Aggressive CSJ load hooks: type=" + implementation.getName() + ", added=" + count);
+        HookLog.log(framework, Log.INFO, "AdFree", "Aggressive CSJ load hooks: type=" + implementation.getName() + ", added=" + count);
     }
 
     private void warn(String stage, Throwable error) {
-        framework.log(Log.WARN, "AdFree", "Aggressive CSJ " + stage + " unavailable; display guards remain active", error);
+        HookLog.log(framework, Log.WARN, "AdFree", "Aggressive CSJ " + stage + " unavailable; display guards remain active", error);
     }
 }

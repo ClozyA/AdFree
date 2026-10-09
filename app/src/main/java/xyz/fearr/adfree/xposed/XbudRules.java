@@ -60,7 +60,7 @@ final class XbudRules {
                         if (task == null) {
                             task = new ButtonTask(activity, target);
                             tasks.put(activity, task);
-                            framework.log(Log.INFO, "AdFree", "Xbud " + target.logName()
+                            HookLog.log(framework, Log.INFO, "AdFree", "Xbud " + target.logName()
                                     + ": observed Activity resume; app=" + activity.getApplication().getClass().getName());
                         }
                         if (!task.attempt.isDone()) {
@@ -69,7 +69,7 @@ final class XbudRules {
                             main.post(task);
                         }
                     } catch (RuntimeException | LinkageError error) {
-                        framework.log(Log.WARN, "AdFree", "Xbud button scheduling unavailable", error);
+                        HookLog.log(framework, Log.WARN, "AdFree", "Xbud button scheduling unavailable", error);
                     }
                 }
                 return result;
@@ -98,10 +98,10 @@ final class XbudRules {
                 }
                 return result;
             }));
-            framework.log(Log.INFO, "AdFree", "Installed Xbud Activity hooks: splash skip + verified portrait interstitial close");
+            HookLog.log(framework, Log.INFO, "AdFree", "Installed Xbud Activity hooks: splash skip + verified portrait interstitial close");
         } catch (ReflectiveOperationException | RuntimeException | LinkageError error) {
             for (XposedInterface.HookHandle handle : handles) handle.unhook();
-            framework.log(Log.WARN, "AdFree", "Xbud Activity hooks unavailable; original UI retained", error);
+            HookLog.log(framework, Log.WARN, "AdFree", "Xbud Activity hooks unavailable; original UI retained", error);
         }
     }
 
@@ -134,11 +134,11 @@ final class XbudRules {
                     if (view == null) continue;
                     if (!candidate.matches(view.getId(),
                             view.getResources().getResourceEntryName(view.getId()), view.getClass().getName())) {
-                        if (mismatched.add(candidate.id())) framework.log(Log.WARN, "AdFree",
+                        if (mismatched.add(candidate.id())) HookLog.log(framework, Log.WARN, "AdFree",
                                 "Xbud " + target.logName() + ": control differs; ignoring " + candidate.resourceName());
                         continue;
                     }
-                    if (observed.add(candidate.id())) framework.log(Log.INFO, "AdFree",
+                    if (observed.add(candidate.id())) HookLog.log(framework, Log.INFO, "AdFree",
                             "Xbud " + target.logName() + ": found " + candidate.resourceName()
                                     + "; shown=" + view.isShown() + ", enabled=" + view.isEnabled()
                                     + ", listener=" + view.hasOnClickListeners());
@@ -164,21 +164,21 @@ final class XbudRules {
 
                     @Override
                     public void clickSkip() {
-                        framework.log(Log.INFO, "AdFree", "Xbud " + target.logName()
+                        HookLog.log(framework, Log.INFO, "AdFree", "Xbud " + target.logName()
                                 + ": activating original " + chosen.resourceName() + " listener once");
                         boolean handled = skip.performClick();
-                        framework.log(Log.INFO, "AdFree", "Xbud " + target.logName()
+                        HookLog.log(framework, Log.INFO, "AdFree", "Xbud " + target.logName()
                                 + ": original click returned " + handled);
                     }
                 });
                 if (again) main.postDelayed(this, 250L);
                 else if (active && !activity.isFinishing() && !activity.isDestroyed()) {
-                    framework.log(Log.INFO, "AdFree", "Xbud " + target.logName()
+                    HookLog.log(framework, Log.INFO, "AdFree", "Xbud " + target.logName()
                             + ": checks ended; original navigation retained");
                 }
             } catch (RuntimeException | LinkageError error) {
                 attempt.cancel();
-                framework.log(Log.WARN, "AdFree", "Xbud " + target.logName()
+                HookLog.log(framework, Log.WARN, "AdFree", "Xbud " + target.logName()
                         + " automatic click unavailable; original UI retained", error);
             }
         }
@@ -202,21 +202,21 @@ final class XbudRules {
                         clickCounts.put(activity, Math.min(count + 1, 12));
                     }
                     if (count < 12) {
-                        framework.log(Log.INFO, "AdFree", "Xbud interstitial click: activity="
+                        HookLog.log(framework, Log.INFO, "AdFree", "Xbud interstitial click: activity="
                                 + activity.getClass().getName() + ", type=" + view.getClass().getName()
                                 + ", id=0x" + Integer.toHexString(view.getId()));
                     }
                 }
                 return chain.proceed();
             });
-            framework.log(Log.INFO, "AdFree", "Installed Xbud ordinary interstitial close tracing; reward Activities excluded");
+            HookLog.log(framework, Log.INFO, "AdFree", "Installed Xbud ordinary interstitial close tracing; reward Activities excluded");
         } catch (ReflectiveOperationException | RuntimeException | LinkageError error) {
-            framework.log(Log.WARN, "AdFree", "Xbud close tracing unavailable", error);
+            HookLog.log(framework, Log.WARN, "AdFree", "Xbud close tracing unavailable", error);
         }
     }
 
     private void trace(String event) {
-        framework.log(Log.INFO, "AdFree", event);
+        HookLog.log(framework, Log.INFO, "AdFree", event);
         StackTraceElement[] frames = Thread.currentThread().getStackTrace();
         int count = 0;
         for (StackTraceElement frame : frames) {
@@ -224,7 +224,7 @@ final class XbudRules {
             if (name.startsWith("java.lang.Thread") || name.startsWith("xyz.fearr.adfree.")
                     || name.startsWith("io.github.libxposed.") || name.startsWith("org.lsposed."))
                 continue;
-            framework.log(Log.INFO, "AdFree", "Xbud close frame: " + frame);
+            HookLog.log(framework, Log.INFO, "AdFree", "Xbud close frame: " + frame);
             if (++count == 16) break;
         }
     }
@@ -236,18 +236,18 @@ final class XbudRules {
                 Method[] methods = type.getDeclaredMethods();
                 Arrays.sort(methods, Comparator.comparing(Method::toString));
                 for (int i = 0; i < Math.min(methods.length, 60); i++) {
-                    framework.log(Log.INFO, "AdFree", "Xbud interstitial method: " + methods[i]);
+                    HookLog.log(framework, Log.INFO, "AdFree", "Xbud interstitial method: " + methods[i]);
                 }
                 Field[] fields = type.getDeclaredFields();
                 Arrays.sort(fields, Comparator.comparing(Field::getName));
                 for (int i = 0; i < Math.min(fields.length, 30); i++) {
-                    framework.log(Log.INFO, "AdFree", "Xbud interstitial field: " + type.getName()
+                    HookLog.log(framework, Log.INFO, "AdFree", "Xbud interstitial field: " + type.getName()
                             + "." + fields[i].getName() + " : " + fields[i].getType().getName());
                 }
                 type = type.getSuperclass();
             }
         } catch (ReflectiveOperationException | RuntimeException | LinkageError error) {
-            framework.log(Log.WARN, "AdFree", "Xbud interstitial inventory unavailable: " + name, error);
+            HookLog.log(framework, Log.WARN, "AdFree", "Xbud interstitial inventory unavailable: " + name, error);
         }
     }
 

@@ -75,7 +75,7 @@ final class XbudUiDiagnostics {
                             int count = clicks.getOrDefault(activity, 0);
                             if (count < 12) {
                                 clicks.put(activity, count + 1);
-                                framework.log(Log.INFO, "AdFree", "Xbud UI click: activity="
+                                HookLog.log(framework, Log.INFO, "AdFree", "Xbud UI click: activity="
                                         + activity.getClass().getName() + ", " + describe(view));
                             }
                         }
@@ -153,11 +153,11 @@ final class XbudUiDiagnostics {
 
     private void snapshot(Activity activity, View root, String reason) {
         try {
-            framework.log(Log.INFO, "AdFree", "Xbud UI snapshot: activity="
+            HookLog.log(framework, Log.INFO, "AdFree", "Xbud UI snapshot: activity="
                     + activity.getClass().getName() + ", reason=" + reason + ", maxNodes=100");
             int[] remaining = {100};
             walk(root, "0", 0, remaining);
-            framework.log(Log.INFO, "AdFree", "Xbud UI snapshot end: nodes="
+            HookLog.log(framework, Log.INFO, "AdFree", "Xbud UI snapshot end: nodes="
                     + (100 - remaining[0]) + ", budgetReached=" + (remaining[0] == 0));
         } catch (RuntimeException | LinkageError error) {
             warn(error);
@@ -167,7 +167,7 @@ final class XbudUiDiagnostics {
     private void walk(View view, String path, int depth, int[] remaining) {
         if (view == null || remaining[0] == 0 || depth > 12) return;
         remaining[0]--;
-        framework.log(Log.INFO, "AdFree", "Xbud UI node: path=" + path + ", " + describe(view));
+        HookLog.log(framework, Log.INFO, "AdFree", "Xbud UI node: path=" + path + ", " + describe(view));
         if (view instanceof ViewGroup group) {
             // Prefer later children, where SDK overlays are commonly attached, under the node cap.
             for (int i = group.getChildCount() - 1; i >= 0 && remaining[0] > 0; i--) {
@@ -208,6 +208,6 @@ final class XbudUiDiagnostics {
     }
 
     private void warn(Throwable error) {
-        framework.log(Log.WARN, "AdFree", "Xbud UI diagnostics unavailable; original UI retained", error);
+        HookLog.log(framework, Log.WARN, "AdFree", "Xbud UI diagnostics unavailable; original UI retained", error);
     }
 }

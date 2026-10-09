@@ -37,7 +37,7 @@ final class AggressiveAdRules {
         installViewGuards();
         installFivePlayEntries(loader);
         new CsjRequestBlocker(framework).install(loader);
-        framework.log(Log.INFO, "AdFree", "Aggressive ad mode enabled: " + packageName + "; rewards disabled");
+        HookLog.log(framework, Log.INFO, "AdFree", "Aggressive ad mode enabled: " + packageName + "; rewards disabled");
     }
 
     private void installSplash(ClassLoader loader) {
@@ -58,7 +58,7 @@ final class AggressiveAdRules {
                 }
                 return result;
             });
-            framework.log(Log.INFO, "AdFree", "Aggressive splash redirect installed after original onCreate");
+            HookLog.log(framework, Log.INFO, "AdFree", "Aggressive splash redirect installed after original onCreate");
         } catch (ReflectiveOperationException | RuntimeException | LinkageError error) {
             warn("splash redirect", error);
         }
@@ -200,10 +200,10 @@ final class AggressiveAdRules {
     }
 
     private synchronized void once(String key, String event) {
-        if (logged.size() < 80 && logged.add(key)) framework.log(Log.INFO, "AdFree", event);
+        if (logged.size() < 80 && logged.add(key)) HookLog.log(framework, Log.INFO, "AdFree", event);
     }
 
     private void warn(String stage, Throwable error) {
-        framework.log(Log.WARN, "AdFree", "Aggressive " + stage + " unavailable", error);
+        HookLog.log(framework, Log.WARN, "AdFree", "Aggressive " + stage + " unavailable", error);
     }
 }

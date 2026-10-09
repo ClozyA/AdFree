@@ -22,14 +22,22 @@ public final class ModuleApplication extends Application {
     private volatile ScopeController.Gateway scopeGateway;
     public final ExecutorService worker = Executors.newSingleThreadExecutor();
     public final ScopeController scopes = new ScopeController(() -> scopeGateway, worker, this::notifyObservers);
+    private AppLogs logs;
+
+    public synchronized AppLogs logs() {
+        if (logs == null) logs = new AppLogs(this);
+        return logs;
+    }
 
     @Override
     public void onCreate() {
         super.onCreate();
+        logs().record("INFO", "app", "Application started: " + BuildConfig.VERSION_NAME, null);
         XposedServiceHelper.registerListener(new XposedServiceHelper.OnServiceListener() {
             @Override
             public void onServiceBind(XposedService boundService) {
                 service = boundService;
+                logs().record("INFO", "app", "Framework service connected", null);
                 scopeGateway = new ScopeController.Gateway() {
                     @Override
                     public Set<String> readScope() {
@@ -64,6 +72,7 @@ public final class ModuleApplication extends Application {
             public void onServiceDied(XposedService deadService) {
                 if (service == deadService) {
                     service = null;
+                    logs().record("WARN", "app", "Framework service disconnected", null);
                     scopeGateway = null;
                     scopes.connectionChanged();
                     notifyObservers();
@@ -91,6 +100,7 @@ public final class ModuleApplication extends Application {
                             current.getFrameworkName(), current.getFrameworkVersion(), api), api >= 102);
         } catch (RuntimeException error) {
             Log.w("AdFree", "Cannot read framework status", error);
+            logs().record("ERROR", "app", "Cannot read framework status", error);
             return new FrameworkInfo(getString(R.string.framework_error_title), getString(R.string.framework_error), false);
         }
     }

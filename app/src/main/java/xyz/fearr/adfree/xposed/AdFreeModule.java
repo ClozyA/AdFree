@@ -29,7 +29,7 @@ public final class AdFreeModule extends XposedModule {
     @Override
     public void onModuleLoaded(ModuleLoadedParam param) {
         processName = param.getProcessName();
-        log(Log.INFO, TAG, "Module loaded: process=" + processName + ", API=" + getApiVersion()
+        HookLog.log(this, Log.INFO, TAG, "Module loaded: process=" + processName + ", API=" + getApiVersion()
                 + ", module=" + BuildConfig.VERSION_NAME);
     }
 
@@ -37,7 +37,7 @@ public final class AdFreeModule extends XposedModule {
     public void onPackageReady(PackageReadyParam param) {
         String packageName = param.getPackageName();
         if (!isTarget(packageName) || !packageName.equals(processName)) return;
-        log(Log.INFO, TAG, "Package ready: " + packageName);
+        HookLog.log(this, Log.INFO, TAG, "Package ready: " + packageName);
         inspectLoader(packageName, "package-ready", param.getClassLoader());
         String applicationName = param.getApplicationInfo().className;
         if (applicationName == null) return;
@@ -48,19 +48,20 @@ public final class AdFreeModule extends XposedModule {
                 Object result = chain.proceed();
                 try {
                     Context context = (Context) chain.getArgs().get(0);
+                    HookLog.initialize(context);
                     inspectLoader(packageName, "after-attach-context", context.getClassLoader());
                     configure(packageName, context, context.getClassLoader());
                     Context application = (Context) chain.getThisObject();
                     inspectLoader(packageName, "after-attach-application", application.getClassLoader());
                     configure(packageName, context, application.getClassLoader());
                 } catch (RuntimeException | LinkageError error) {
-                    log(Log.WARN, TAG, "Loader inspection failed: " + packageName, error);
+                    HookLog.log(this, Log.WARN, TAG, "Loader inspection failed: " + packageName, error);
                 }
                 return result;
             });
-            log(Log.INFO, TAG, "Watching " + applicationName + ".attachBaseContext");
+            HookLog.log(this, Log.INFO, TAG, "Watching " + applicationName + ".attachBaseContext");
         } catch (ReflectiveOperationException | RuntimeException | LinkageError error) {
-            log(Log.WARN, TAG, "Cannot watch packed Application: " + applicationName, error);
+            HookLog.log(this, Log.WARN, TAG, "Cannot watch packed Application: " + applicationName, error);
         }
     }
 
@@ -73,15 +74,15 @@ public final class AdFreeModule extends XposedModule {
             try {
                 PackageInfo info = context.getPackageManager().getPackageInfo(packageName, 0);
                 long code = Build.VERSION.SDK_INT >= 28 ? info.getLongVersionCode() : info.versionCode;
-                log(Log.INFO, TAG, "Target version: " + packageName + " " + info.versionName + " (" + code + ")");
+                HookLog.log(this, Log.INFO, TAG, "Target version: " + packageName + " " + info.versionName + " (" + code + ")");
                 TargetCatalog.Target target = TargetCatalog.find(packageName);
                 if (target != null && !target.matches(info.versionName, code)) {
-                    log(Log.WARN, TAG, "Version differs from inspected APK; continuing best-effort rules: "
+                    HookLog.log(this, Log.WARN, TAG, "Version differs from inspected APK; continuing best-effort rules: "
                             + packageName + ", inspected=" + target.versionName() + " (" + target.versionCode() + ")");
                 }
             } catch (android.content.pm.PackageManager.NameNotFoundException |
                      RuntimeException error) {
-                log(Log.WARN, TAG, "Target version unavailable; continuing best-effort rules: " + packageName, error);
+                HookLog.log(this, Log.WARN, TAG, "Target version unavailable; continuing best-effort rules: " + packageName, error);
             }
             if ("com.fiveplay".equals(packageName)) {
                 new FivePlayRules(this).install(loader);
@@ -92,7 +93,7 @@ public final class AdFreeModule extends XposedModule {
                 new AggressiveAdRules(this, packageName).install(loader);
             }
         } catch (RuntimeException | LinkageError error) {
-            log(Log.WARN, TAG, "Cannot configure target: " + packageName, error);
+            HookLog.log(this, Log.WARN, TAG, "Cannot configure target: " + packageName, error);
         }
     }
 
@@ -106,18 +107,18 @@ public final class AdFreeModule extends XposedModule {
                 Method[] methods = type.getDeclaredMethods();
                 Arrays.sort(methods, Comparator.comparing(Method::toString));
                 for (int i = 0; i < Math.min(methods.length, 80); i++) {
-                    log(Log.INFO, TAG, "Xbud method: " + methods[i]);
+                    HookLog.log(this, Log.INFO, TAG, "Xbud method: " + methods[i]);
                 }
                 Field[] fields = type.getDeclaredFields();
                 Arrays.sort(fields, Comparator.comparing(Field::getName));
                 for (int i = 0; i < Math.min(fields.length, 40); i++) {
-                    log(Log.INFO, TAG, "Xbud field: " + name + "." + fields[i].getName()
+                    HookLog.log(this, Log.INFO, TAG, "Xbud field: " + name + "." + fields[i].getName()
                             + " : " + fields[i].getType().getName());
                 }
-                log(Log.INFO, TAG, "Xbud inventory: " + name + ", methods=" + methods.length
+                HookLog.log(this, Log.INFO, TAG, "Xbud inventory: " + name + ", methods=" + methods.length
                         + ", fields=" + fields.length + ", limits=80/40; values not collected");
             } catch (ReflectiveOperationException | RuntimeException | LinkageError error) {
-                log(Log.WARN, TAG, "Xbud inventory unavailable: " + name, error);
+                HookLog.log(this, Log.WARN, TAG, "Xbud inventory unavailable: " + name, error);
             }
         }
     }
@@ -139,12 +140,12 @@ public final class AdFreeModule extends XposedModule {
         for (String name : classes) {
             try {
                 Class<?> type = Class.forName(name, false, loader);
-                log(Log.INFO, TAG, stage + ": found " + name + ", loader="
+                HookLog.log(this, Log.INFO, TAG, stage + ": found " + name + ", loader="
                         + type.getClassLoader().getClass().getName());
             } catch (ClassNotFoundException error) {
-                log(Log.INFO, TAG, stage + ": not yet available " + name);
+                HookLog.log(this, Log.INFO, TAG, stage + ": not yet available " + name);
             } catch (RuntimeException | LinkageError error) {
-                log(Log.WARN, TAG, stage + ": cannot resolve " + name, error);
+                HookLog.log(this, Log.WARN, TAG, stage + ": cannot resolve " + name, error);
             }
         }
     }

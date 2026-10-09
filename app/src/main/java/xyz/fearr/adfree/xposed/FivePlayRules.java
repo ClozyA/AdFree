@@ -41,7 +41,7 @@ final class FivePlayRules {
                 if (chain.getArgs().get(3) == null) return chain.proceed();
                 Object[] args = chain.getArgs().toArray();
                 args[2] = null;
-                framework.log(Log.INFO, "AdFree", "5E splash/list: using original no-ad path");
+                HookLog.log(framework, Log.INFO, "AdFree", "5E splash/list: using original no-ad path");
                 return chain.proceed(args);
             });
             framework.hook(withoutList)
@@ -49,7 +49,7 @@ final class FivePlayRules {
                     .setExceptionMode(XposedInterface.ExceptionMode.PASSTHROUGH)
                     .intercept(chain -> {
                         if (chain.getArgs().get(2) == null) return chain.proceed();
-                        framework.log(Log.INFO, "AdFree", "5E splash/request: using original no-ad path");
+                        HookLog.log(framework, Log.INFO, "AdFree", "5E splash/request: using original no-ad path");
                         try {
                             return originalWithList.invoke(chain.getThisObject(),
                                     chain.getArgs().get(0), chain.getArgs().get(1), null, chain.getArgs().get(2));
@@ -57,10 +57,10 @@ final class FivePlayRules {
                             throw error.getCause();
                         }
                     });
-            framework.log(Log.INFO, "AdFree", "Installed 5E splash rules: both overloads");
+            HookLog.log(framework, Log.INFO, "AdFree", "Installed 5E splash rules: both overloads");
         } catch (ReflectiveOperationException | RuntimeException | LinkageError error) {
             if (listHook != null) listHook.unhook();
-            framework.log(Log.WARN, "AdFree", "5E splash rules unavailable; original behavior retained", error);
+            HookLog.log(framework, Log.WARN, "AdFree", "5E splash rules unavailable; original behavior retained", error);
         }
     }
 
@@ -72,12 +72,12 @@ final class FivePlayRules {
             Method show = type.getDeclaredMethod("Z0", activity, data);
             requireVoid(show);
             framework.hook(show).intercept(chain -> {
-                framework.log(Log.INFO, "AdFree", "5E match overlay: blocked creation");
+                HookLog.log(framework, Log.INFO, "AdFree", "5E match overlay: blocked creation");
                 return null;
             });
-            framework.log(Log.INFO, "AdFree", "Installed 5E match overlay rule");
+            HookLog.log(framework, Log.INFO, "AdFree", "Installed 5E match overlay rule");
         } catch (ReflectiveOperationException | RuntimeException | LinkageError error) {
-            framework.log(Log.WARN, "AdFree", "5E match overlay rule unavailable; original behavior retained", error);
+            HookLog.log(framework, Log.WARN, "AdFree", "5E match overlay rule unavailable; original behavior retained", error);
         }
     }
 
