@@ -6,21 +6,28 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag to build
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
   release:
-    if: github.ref_type == 'tag'
+    if: github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
     runs-on: windows-latest
     timeout-minutes: 30
     permissions:
       contents: write
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
     defaults:
       run:
         shell: pwsh
@@ -28,6 +35,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          ref: ${{ inputs.tag || github.ref }}
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
@@ -37,7 +45,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $version = [regex]::Match((Get-Content app/build.gradle.kts -Raw), 'versionName = "([^"]+)"').Groups[1].Value
-          if ($env:GITHUB_REF_NAME -ne "v$version") { throw "Tag must match versionName: v$version" }
+          if ($env:RELEASE_TAG -ne "v$version") { throw "Tag must match versionName: v$version" }
           if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Expected a numeric release version.' }
           "ADFREE_VERSION=$version" >> $env:GITHUB_ENV
       - name: Prepare Android SDK
@@ -45,7 +53,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $manager = Join-Path $env:ANDROID_HOME 'cmdline-tools/latest/lib/sdkmanager-classpath.jar'
           if (!(Test-Path $manager)) { throw 'Android SDK command-line tools are missing.' }
-          & java -classpath $manager com.android.sdklib.tool.sdkmanager.SdkManagerCli --sdk_root=$env:ANDROID_HOME 'platforms;android-37' 'build-tools;37.0.0' 'platform-tools'
+          & java -classpath $manager com.android.sdklib.tool.sdkmanager.SdkManagerCli --sdk_root=$env:ANDROID_HOME 'platforms;android-37.0' 'build-tools;37.0.0' 'platform-tools'
           if ($LASTEXITCODE -ne 0) { throw 'Android SDK installation failed.' }
       - name: Restore signing key
         env:
@@ -84,7 +92,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $ErrorActionPreference = 'Stop'
-          $tag = $env:GITHUB_REF_NAME
+          $tag = $env:RELEASE_TAG
           $assets = @(Get-ChildItem dist -File | Where-Object { $_.Extension -eq '.apk' -or $_.Name -eq 'SHA256SUMS' } | ForEach-Object FullName)
           & gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
           if ($LASTEXITCODE -eq 0) {

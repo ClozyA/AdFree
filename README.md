@@ -62,7 +62,7 @@ git tag v0.8.0
 git push origin v0.8.0
 ```
 
-工作流在 Windows / PowerShell 7 中运行单元测试、lint、两种构建、签名验证和 SHA-256 计算，然后发布两种 APK。也支持在 GitHub 创建已发布的 Release，或选中版本标签手动运行工作流。
+工作流在 Windows / PowerShell 7 中运行单元测试、lint、两种构建、签名验证和 SHA-256 计算，然后发布两种 APK。Android 17 的 SDK 平台包名为 `platforms;android-37.0`。也支持在 GitHub 创建已发布的 Release，或从主分支手动运行工作流并输入已有版本标签。
 
 发布签名必须长期保留，避免后续版本无法覆盖升级。之前使用默认调试证书安装的同包名 APK，与正式发布证书不同，首次切换可能需要卸载旧调试版。
 
