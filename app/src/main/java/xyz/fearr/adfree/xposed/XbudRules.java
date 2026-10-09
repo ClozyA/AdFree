@@ -22,7 +22,9 @@ import java.util.Set;
 
 import io.github.libxposed.api.XposedInterface;
 
-/** Xbud 2.6.8: original splash skip / verified ordinary-ad close controls, no reward hooks. */
+/**
+ * Xbud 2.6.8: original splash skip / verified ordinary-ad close controls, no reward hooks.
+ */
 final class XbudRules {
     private final XposedInterface framework;
     private final Handler main = new Handler(Looper.getMainLooper());
@@ -91,7 +93,9 @@ final class XbudRules {
                     task.attempt.cancel();
                     main.removeCallbacks(task);
                 }
-                synchronized (clickCounts) { clickCounts.remove(activity); }
+                synchronized (clickCounts) {
+                    clickCounts.remove(activity);
+                }
                 return result;
             }));
             framework.log(Log.INFO, "AdFree", "Installed Xbud Activity hooks: splash skip + verified portrait interstitial close");
@@ -115,9 +119,13 @@ final class XbudRules {
             attempt = new SkipAttempt(target.maxChecks());
         }
 
-        @Override public void run() {
+        @Override
+        public void run() {
             Activity activity = owner.get();
-            if (activity == null) { attempt.cancel(); return; }
+            if (activity == null) {
+                attempt.cancel();
+                return;
+            }
             try {
                 View ready = null;
                 XbudTargets.Button readyTarget = null;
@@ -143,14 +151,19 @@ final class XbudRules {
                 final View skip = ready;
                 final XbudTargets.Button chosen = readyTarget;
                 boolean again = attempt.tick(new SkipAttempt.Host() {
-                    @Override public boolean isActive() {
+                    @Override
+                    public boolean isActive() {
                         return active && !activity.isFinishing() && !activity.isDestroyed();
                     }
-                    @Override public boolean canSkip() {
+
+                    @Override
+                    public boolean canSkip() {
                         return skip != null && skip.isShown() && skip.isEnabled()
                                 && skip.hasOnClickListeners();
                     }
-                    @Override public void clickSkip() {
+
+                    @Override
+                    public void clickSkip() {
                         framework.log(Log.INFO, "AdFree", "Xbud " + target.logName()
                                 + ": activating original " + chosen.resourceName() + " listener once");
                         boolean handled = skip.performClick();
@@ -175,7 +188,8 @@ final class XbudRules {
         try {
             framework.hook(Activity.class.getDeclaredMethod("finish")).intercept(chain -> {
                 Activity activity = (Activity) chain.getThisObject();
-                if (isInterstitial(activity)) trace("Xbud interstitial finish: " + activity.getClass().getName());
+                if (isInterstitial(activity))
+                    trace("Xbud interstitial finish: " + activity.getClass().getName());
                 return chain.proceed();
             });
             framework.hook(View.class.getDeclaredMethod("performClick")).intercept(chain -> {
@@ -208,7 +222,8 @@ final class XbudRules {
         for (StackTraceElement frame : frames) {
             String name = frame.getClassName();
             if (name.startsWith("java.lang.Thread") || name.startsWith("xyz.fearr.adfree.")
-                    || name.startsWith("io.github.libxposed.") || name.startsWith("org.lsposed.")) continue;
+                    || name.startsWith("io.github.libxposed.") || name.startsWith("org.lsposed."))
+                continue;
             framework.log(Log.INFO, "AdFree", "Xbud close frame: " + frame);
             if (++count == 16) break;
         }

@@ -1,6 +1,8 @@
 package xyz.fearr.adfree.xposed;
 
-/** SDK namespaces in the supplied APKs; applies only inside the two version-gated apps. */
+/**
+ * SDK namespaces in the supplied APKs; applies only inside the two version-gated apps.
+ */
 final class AggressiveAdPolicy {
     private static final String[] SDK_PREFIXES = {
             "com.bytedance.sdk.openadsdk.", "com.byazt.", "com.kwad.", "com.qq.e.",
@@ -26,5 +28,6 @@ final class AggressiveAdPolicy {
         return "run.xbud.android".equals(packageName) && XbudTargets.SPLASH.equals(activityName);
     }
 
-    private AggressiveAdPolicy() {}
+    private AggressiveAdPolicy() {
+    }
 }

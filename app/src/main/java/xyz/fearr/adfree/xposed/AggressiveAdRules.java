@@ -18,7 +18,9 @@ import java.util.Set;
 
 import io.github.libxposed.api.XposedInterface;
 
-/** User-selected aggressive display blocking, including all rewards, in target apps only. */
+/**
+ * User-selected aggressive display blocking, including all rewards, in target apps only.
+ */
 final class AggressiveAdRules {
     private final XposedInterface framework;
     private final String packageName;
@@ -57,14 +59,18 @@ final class AggressiveAdRules {
                 return result;
             });
             framework.log(Log.INFO, "AdFree", "Aggressive splash redirect installed after original onCreate");
-        } catch (ReflectiveOperationException | RuntimeException | LinkageError error) { warn("splash redirect", error); }
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError error) {
+            warn("splash redirect", error);
+        }
     }
 
     private void installLaunchGuards() {
         for (Method method : Instrumentation.class.getDeclaredMethods()) {
             if (!method.getName().startsWith("execStartActivit")) continue;
-            if (method.getReturnType().isPrimitive() && method.getReturnType() != void.class) continue;
-            if (Arrays.stream(method.getParameterTypes()).noneMatch(type -> type == Intent.class || type == Intent[].class)) continue;
+            if (method.getReturnType().isPrimitive() && method.getReturnType() != void.class)
+                continue;
+            if (Arrays.stream(method.getParameterTypes()).noneMatch(type -> type == Intent.class || type == Intent[].class))
+                continue;
             try {
                 framework.hook(method).intercept(chain -> {
                     Object[] args = chain.getArgs().toArray();
@@ -73,7 +79,8 @@ final class AggressiveAdRules {
                         if (args[i] instanceof Intent intent && blocked(intent, args)) return null;
                         if (args[i] instanceof Intent[] intents) {
                             ArrayList<Intent> allowed = new ArrayList<>();
-                            for (Intent intent : intents) if (!blocked(intent, args)) allowed.add(intent);
+                            for (Intent intent : intents)
+                                if (!blocked(intent, args)) allowed.add(intent);
                             if (allowed.size() != intents.length) {
                                 if (allowed.isEmpty()) return null;
                                 args[i] = allowed.toArray(new Intent[0]);
@@ -83,7 +90,9 @@ final class AggressiveAdRules {
                     }
                     return changed ? chain.proceed(args) : chain.proceed();
                 });
-            } catch (RuntimeException | LinkageError error) { warn("launch " + method.getName(), error); }
+            } catch (RuntimeException | LinkageError error) {
+                warn("launch " + method.getName(), error);
+            }
         }
         try {
             framework.hook(Instrumentation.class.getDeclaredMethod("newActivity", ClassLoader.class, String.class, Intent.class))
@@ -95,7 +104,9 @@ final class AggressiveAdRules {
                         }
                         return chain.proceed();
                     });
-        } catch (ReflectiveOperationException | RuntimeException | LinkageError error) { warn("Activity fallback", error); }
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError error) {
+            warn("Activity fallback", error);
+        }
     }
 
     private boolean blocked(Intent intent, Object[] args) {
@@ -137,7 +148,9 @@ final class AggressiveAdRules {
                         }
                         return chain.proceed();
                     });
-        } catch (ReflectiveOperationException | RuntimeException | LinkageError error) { warn("View visibility", error); }
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError error) {
+            warn("View visibility", error);
+        }
         try {
             framework.hook(Dialog.class.getDeclaredMethod("show")).intercept(chain -> {
                 if (AggressiveAdPolicy.sdkClass(chain.getThisObject().getClass().getName()) || sdkCaller()) {
@@ -146,7 +159,9 @@ final class AggressiveAdRules {
                 }
                 return chain.proceed();
             });
-        } catch (ReflectiveOperationException | RuntimeException | LinkageError error) { warn("SDK dialog", error); }
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError error) {
+            warn("SDK dialog", error);
+        }
     }
 
     private static boolean sdkCaller() {
@@ -163,20 +178,25 @@ final class AggressiveAdRules {
             Class<?> utils = Class.forName("com.fiveplay.commonlibrary.utils.AdUtils", false, loader);
             for (Method method : utils.getDeclaredMethods()) {
                 if (method.getReturnType() != void.class
-                        || !(method.getName().equals("showReward") || method.getName().equals("dealFeedAd"))) continue;
+                        || !(method.getName().equals("showReward") || method.getName().equals("dealFeedAd")))
+                    continue;
                 framework.hook(method).intercept(chain -> {
                     once("5e:" + method.getName(), "Aggressive 5E request blocked: " + method.getName());
                     return null;
                 });
             }
-        } catch (ReflectiveOperationException | RuntimeException | LinkageError error) { warn("5E business ad requests", error); }
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError error) {
+            warn("5E business ad requests", error);
+        }
         try {
             Class<?> nativeView = Class.forName("com.fiveplay.commonlibrary.view.ad.AdNativeView", false, loader);
             framework.hook(nativeView.getDeclaredMethod("showAd")).intercept(chain -> {
                 once("5e-native-feed", "Aggressive 5E Flutter feed ad blocked");
                 return null;
             });
-        } catch (ReflectiveOperationException | RuntimeException | LinkageError error) { warn("5E Flutter feed", error); }
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError error) {
+            warn("5E Flutter feed", error);
+        }
     }
 
     private synchronized void once(String key, String event) {

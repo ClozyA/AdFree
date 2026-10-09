@@ -1,6 +1,8 @@
 package xyz.fearr.adfree.xposed;
 
-/** Exact allowlist from the supplied APK and the user's ordinary-ad close trace. */
+/**
+ * Exact allowlist from the supplied APK and the user's ordinary-ad close trace.
+ */
 final class XbudTargets {
     static final String SPLASH = "run.xbud.android.mvp.ui.other.SplashActivity";
     static final String MAIN = "run.xbud.android.mvp.ui.other.MainActivity";
@@ -52,5 +54,6 @@ final class XbudTargets {
         return SPLASH.equals(activityName) || MAIN.equals(activityName);
     }
 
-    private XbudTargets() {}
+    private XbudTargets() {
+    }
 }

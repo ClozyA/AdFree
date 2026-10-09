@@ -17,7 +17,9 @@ import io.github.libxposed.api.XposedModule;
 import xyz.fearr.adfree.BuildConfig;
 import xyz.fearr.adfree.TargetCatalog;
 
-/** Wait for packed-app loading; inspected versions are advisory. */
+/**
+ * Wait for packed-app loading; inspected versions are advisory.
+ */
 public final class AdFreeModule extends XposedModule {
     private static final String TAG = "AdFree";
     private String processName;
@@ -77,7 +79,8 @@ public final class AdFreeModule extends XposedModule {
                     log(Log.WARN, TAG, "Version differs from inspected APK; continuing best-effort rules: "
                             + packageName + ", inspected=" + target.versionName() + " (" + target.versionCode() + ")");
                 }
-            } catch (android.content.pm.PackageManager.NameNotFoundException | RuntimeException error) {
+            } catch (android.content.pm.PackageManager.NameNotFoundException |
+                     RuntimeException error) {
                 log(Log.WARN, TAG, "Target version unavailable; continuing best-effort rules: " + packageName, error);
             }
             if ("com.fiveplay".equals(packageName)) {
@@ -129,10 +132,10 @@ public final class AdFreeModule extends XposedModule {
         }
         String[] classes = "com.fiveplay".equals(packageName)
                 ? new String[]{"com.fiveplay.commonlibrary.utils.AdUtils",
-                    "com.fiveplay.commonlibrary.view.ad.AdNativeView",
-                    "com.fiveplay.reward.service.AdFlowServiceImpl"}
+                "com.fiveplay.commonlibrary.view.ad.AdNativeView",
+                "com.fiveplay.reward.service.AdFlowServiceImpl"}
                 : new String[]{"run.xbud.android.mvp.ui.other.SplashActivity",
-                    "run.xbud.android.mvp.ui.other.MainActivity"};
+                "run.xbud.android.mvp.ui.other.MainActivity"};
         for (String name : classes) {
             try {
                 Class<?> type = Class.forName(name, false, loader);

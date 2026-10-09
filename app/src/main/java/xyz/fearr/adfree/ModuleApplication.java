@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import dev.adfree.module.R;
+
 import io.github.libxposed.service.XposedService;
 import io.github.libxposed.service.XposedServiceHelper;
 
@@ -31,14 +31,28 @@ public final class ModuleApplication extends Application {
             public void onServiceBind(XposedService boundService) {
                 service = boundService;
                 scopeGateway = new ScopeController.Gateway() {
-                    @Override public Set<String> readScope() { return new HashSet<>(boundService.getScope()); }
-                    @Override public void removeScope(String packageName) {
+                    @Override
+                    public Set<String> readScope() {
+                        return new HashSet<>(boundService.getScope());
+                    }
+
+                    @Override
+                    public void removeScope(String packageName) {
                         boundService.removeScope(Collections.singletonList(packageName));
                     }
-                    @Override public void requestScope(String packageName, ScopeController.Callback callback) {
+
+                    @Override
+                    public void requestScope(String packageName, ScopeController.Callback callback) {
                         boundService.requestScope(Collections.singletonList(packageName), new XposedService.OnScopeEventListener() {
-                            @Override public void onScopeRequestApproved(java.util.List<String> approved) { callback.approved(); }
-                            @Override public void onScopeRequestFailed(String message) { callback.failed(message); }
+                            @Override
+                            public void onScopeRequestApproved(java.util.List<String> approved) {
+                                callback.approved();
+                            }
+
+                            @Override
+                            public void onScopeRequestFailed(String message) {
+                                callback.failed(message);
+                            }
                         });
                     }
                 };
@@ -63,7 +77,8 @@ public final class ModuleApplication extends Application {
         return info.title() + "\n" + info.details();
     }
 
-    public record FrameworkInfo(String title, String details, boolean connected) {}
+    public record FrameworkInfo(String title, String details, boolean connected) {
+    }
 
     public FrameworkInfo frameworkInfo() {
         XposedService current = service;

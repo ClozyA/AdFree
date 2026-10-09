@@ -1,10 +1,14 @@
 package xyz.fearr.adfree.xposed;
 
-/** Bounded, at-most-once activation of an existing, usable skip control. */
+/**
+ * Bounded, at-most-once activation of an existing, usable skip control.
+ */
 final class SkipAttempt {
     interface Host {
         boolean isActive();
+
         boolean canSkip();
+
         void clickSkip();
     }
 
@@ -20,7 +24,9 @@ final class SkipAttempt {
         remaining = maxChecks;
     }
 
-    /** Called on the UI thread. True means another delayed check is allowed. */
+    /**
+     * Called on the UI thread. True means another delayed check is allowed.
+     */
     boolean tick(Host host) {
         if (done) return false;
         if (!host.isActive()) return false;

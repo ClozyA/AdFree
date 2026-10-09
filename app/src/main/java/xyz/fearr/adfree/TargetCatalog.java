@@ -4,9 +4,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-/** Shared inspected versions; mismatches are advisory, never an injection gate. */
+/**
+ * Shared inspected versions; mismatches are advisory, never an injection gate.
+ */
 public final class TargetCatalog {
-    private TargetCatalog() {}
+    private TargetCatalog() {
+    }
 
     public record Target(String packageName, String name, String versionName, long versionCode) {
         public boolean matches(String installedName, long installedCode) {

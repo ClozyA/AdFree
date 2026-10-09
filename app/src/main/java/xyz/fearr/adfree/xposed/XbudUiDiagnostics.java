@@ -16,7 +16,9 @@ import java.util.WeakHashMap;
 
 import io.github.libxposed.api.XposedInterface;
 
-/** Bounded structural evidence only: no text, extras, field values or UI actions. */
+/**
+ * Bounded structural evidence only: no text, extras, field values or UI actions.
+ */
 final class XbudUiDiagnostics {
     private final XposedInterface framework;
     private final Handler main;
@@ -55,10 +57,14 @@ final class XbudUiDiagnostics {
                             }, 500L);
                         }
                     }
-                } catch (RuntimeException | LinkageError error) { warn(error); }
+                } catch (RuntimeException | LinkageError error) {
+                    warn(error);
+                }
                 return result;
             });
-        } catch (ReflectiveOperationException | RuntimeException | LinkageError error) { warn(error); }
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError error) {
+            warn(error);
+        }
         try {
             framework.hook(View.class.getDeclaredMethod("performClick")).intercept(chain -> {
                 try {
@@ -74,10 +80,14 @@ final class XbudUiDiagnostics {
                             }
                         }
                     }
-                } catch (RuntimeException | LinkageError error) { warn(error); }
+                } catch (RuntimeException | LinkageError error) {
+                    warn(error);
+                }
                 return chain.proceed();
             });
-        } catch (ReflectiveOperationException | RuntimeException | LinkageError error) { warn(error); }
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError error) {
+            warn(error);
+        }
     }
 
     void onResume(Activity activity) {
@@ -91,7 +101,9 @@ final class XbudUiDiagnostics {
             task.active = true;
             main.removeCallbacks(task);
             if (task.index < 4) main.post(task);
-        } catch (RuntimeException | LinkageError error) { warn(error); }
+        } catch (RuntimeException | LinkageError error) {
+            warn(error);
+        }
     }
 
     void onPause(Activity activity) {
@@ -106,7 +118,9 @@ final class XbudUiDiagnostics {
         onPause(activity);
         tasks.remove(activity);
         dialogs.remove(activity);
-        synchronized (clicks) { clicks.remove(activity); }
+        synchronized (clicks) {
+            clicks.remove(activity);
+        }
     }
 
     private final class SnapshotTask implements Runnable {
@@ -114,17 +128,22 @@ final class XbudUiDiagnostics {
         private int index;
         private boolean active;
 
-        SnapshotTask(Activity activity) { owner = new WeakReference<>(activity); }
+        SnapshotTask(Activity activity) {
+            owner = new WeakReference<>(activity);
+        }
 
-        @Override public void run() {
+        @Override
+        public void run() {
             Activity activity = owner.get();
-            if (!active || activity == null || activity.isFinishing() || activity.isDestroyed()) return;
+            if (!active || activity == null || activity.isFinishing() || activity.isDestroyed())
+                return;
             try {
                 if (activity.getWindow() != null) {
                     snapshot(activity, activity.getWindow().getDecorView(), "resume-" + index);
                 }
                 index++;
-                if (index < 4) main.postDelayed(this, index == 1 ? 1000L : index == 2 ? 3000L : 4000L);
+                if (index < 4)
+                    main.postDelayed(this, index == 1 ? 1000L : index == 2 ? 3000L : 4000L);
             } catch (RuntimeException | LinkageError error) {
                 index = 4;
                 warn(error);
@@ -140,7 +159,9 @@ final class XbudUiDiagnostics {
             walk(root, "0", 0, remaining);
             framework.log(Log.INFO, "AdFree", "Xbud UI snapshot end: nodes="
                     + (100 - remaining[0]) + ", budgetReached=" + (remaining[0] == 0));
-        } catch (RuntimeException | LinkageError error) { warn(error); }
+        } catch (RuntimeException | LinkageError error) {
+            warn(error);
+        }
     }
 
     private void walk(View view, String path, int depth, int[] remaining) {
@@ -158,8 +179,11 @@ final class XbudUiDiagnostics {
     private static String describe(View view) {
         String name = "-";
         if (view.getId() != View.NO_ID) {
-            try { name = view.getResources().getResourceEntryName(view.getId()); }
-            catch (Resources.NotFoundException ignored) { name = "unresolved"; }
+            try {
+                name = view.getResources().getResourceEntryName(view.getId());
+            } catch (Resources.NotFoundException ignored) {
+                name = "unresolved";
+            }
         }
         return "type=" + view.getClass().getName() + ", id=0x" + Integer.toHexString(view.getId())
                 + ", resource=" + name + ", visibility=" + view.getVisibility()

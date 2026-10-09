@@ -9,19 +9,27 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
-/** Scope switches always reflect the framework's readback, not a local preference. */
+/**
+ * Scope switches always reflect the framework's readback, not a local preference.
+ */
 public final class ScopeController {
     public interface Gateway {
         Set<String> readScope();
+
         void requestScope(String packageName, Callback callback);
+
         void removeScope(String packageName);
     }
+
     public interface Callback {
         void approved();
+
         void failed(String message);
     }
+
     public record Snapshot(boolean available, Set<String> packages, Set<String> pending,
-                           Map<String, String> errors, String readError) {}
+                           Map<String, String> errors, String readError) {
+    }
 
     private final Supplier<Gateway> gateway;
     private final Executor executor;
@@ -48,7 +56,8 @@ public final class ScopeController {
     }
 
     public void setEnabled(String packageName, boolean enabled) {
-        if (TargetCatalog.find(packageName) == null) throw new IllegalArgumentException("Unsupported target");
+        if (TargetCatalog.find(packageName) == null)
+            throw new IllegalArgumentException("Unsupported target");
         Object token = new Object();
         if (operations.putIfAbsent(packageName, token) != null) return;
         errors.remove(packageName);
@@ -62,10 +71,13 @@ public final class ScopeController {
             try {
                 if (enabled) {
                     current.requestScope(packageName, new Callback() {
-                        @Override public void approved() {
+                        @Override
+                        public void approved() {
                             executor.execute(() -> verify(current, packageName, token, true));
                         }
-                        @Override public void failed(String message) {
+
+                        @Override
+                        public void failed(String message) {
                             finish(packageName, token, message.trim().isEmpty() ? "框架未批准此请求。" : message);
                         }
                     });
@@ -94,7 +106,8 @@ public final class ScopeController {
 
     private void finish(String packageName, Object token, String error) {
         if (!operations.remove(packageName, token)) return;
-        if (error == null) errors.remove(packageName); else errors.put(packageName, error);
+        if (error == null) errors.remove(packageName);
+        else errors.put(packageName, error);
         changed.run();
     }
 

@@ -9,7 +9,9 @@ import java.lang.reflect.Method;
 
 import io.github.libxposed.api.XposedInterface;
 
-/** Rules derived from 5E 7.2.5; each hook validates its expected method signature. */
+/**
+ * Rules derived from 5E 7.2.5; each hook validates its expected method signature.
+ */
 final class FivePlayRules {
     private final XposedInterface framework;
 
@@ -80,6 +82,7 @@ final class FivePlayRules {
     }
 
     private static void requireVoid(Method method) throws NoSuchMethodException {
-        if (method.getReturnType() != void.class) throw new NoSuchMethodException("Unexpected return type: " + method);
+        if (method.getReturnType() != void.class)
+            throw new NoSuchMethodException("Unexpected return type: " + method);
     }
 }

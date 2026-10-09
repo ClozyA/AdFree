@@ -200,8 +200,6 @@ private fun Dashboard(
                             fontSize = 15.sp, lineHeight = 23.sp)
                     }
                     Spacer(Modifier.height(16.dp))
-                    Caption(stringResource(R.string.framework_hint),
-                        color = frameworkContent.copy(alpha = 0.80f))
                 }
                 SectionHeading(stringResource(R.string.targets_title))
                 Card(Modifier.fillMaxWidth(), insideMargin = PaddingValues(24.dp)) {
@@ -212,8 +210,6 @@ private fun Dashboard(
                     }
                 }
                 state.scope.readError()?.let { Caption(it, Modifier.padding(8.dp), danger) }
-                Caption(stringResource(R.string.scope_hint),
-                    Modifier.padding(horizontal = 8.dp, vertical = 12.dp))
                 SectionHeading(stringResource(R.string.tools_title))
                 Card(Modifier.fillMaxWidth(), insideMargin = PaddingValues(16.dp)) {
                     Button(onClick = onRefresh, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.refresh)) }
@@ -256,8 +252,6 @@ private fun TargetRow(
             enabled = state.framework.connected() && state.scope.available() &&
                 state.scope.pending().isEmpty() &&
                 (installed.state == InstallState.INSTALLED || scoped),
-            modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp)
-                .semantics { contentDescription = "${installed.label}作用域" },
         )
     }
     Spacer(Modifier.height(12.dp))
