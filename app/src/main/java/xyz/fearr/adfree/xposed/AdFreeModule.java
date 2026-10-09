@@ -15,8 +15,9 @@ import java.util.Set;
 
 import io.github.libxposed.api.XposedModule;
 import xyz.fearr.adfree.BuildConfig;
+import xyz.fearr.adfree.TargetCatalog;
 
-/** Wait for packed-app loading before installing version-specific rules. */
+/** Wait for packed-app loading; inspected versions are advisory. */
 public final class AdFreeModule extends XposedModule {
     private static final String TAG = "AdFree";
     private String processName;
@@ -67,26 +68,27 @@ public final class AdFreeModule extends XposedModule {
             if (!configuredLoaders.add(loader)) return;
         }
         try {
-            PackageInfo info = context.getPackageManager().getPackageInfo(packageName, 0);
-            long code = Build.VERSION.SDK_INT >= 28 ? info.getLongVersionCode() : info.versionCode;
-            log(Log.INFO, TAG, "Target version: " + packageName + " " + info.versionName + " (" + code + ")");
-            if ("com.fiveplay".equals(packageName)) {
-                if ("7.2.5".equals(info.versionName) && code == 609181924L) {
-                    new FivePlayRules(this).install(loader);
-                    new AggressiveAdRules(this, packageName).install(loader);
-                } else {
-                    log(Log.WARN, TAG, "5E version differs from inspected APK; ad rules skipped");
+            try {
+                PackageInfo info = context.getPackageManager().getPackageInfo(packageName, 0);
+                long code = Build.VERSION.SDK_INT >= 28 ? info.getLongVersionCode() : info.versionCode;
+                log(Log.INFO, TAG, "Target version: " + packageName + " " + info.versionName + " (" + code + ")");
+                TargetCatalog.Target target = TargetCatalog.find(packageName);
+                if (target != null && !target.matches(info.versionName, code)) {
+                    log(Log.WARN, TAG, "Version differs from inspected APK; continuing best-effort rules: "
+                            + packageName + ", inspected=" + target.versionName() + " (" + target.versionCode() + ")");
                 }
+            } catch (android.content.pm.PackageManager.NameNotFoundException | RuntimeException error) {
+                log(Log.WARN, TAG, "Target version unavailable; continuing best-effort rules: " + packageName, error);
+            }
+            if ("com.fiveplay".equals(packageName)) {
+                new FivePlayRules(this).install(loader);
+                new AggressiveAdRules(this, packageName).install(loader);
             } else {
                 inspectXbudMembers(loader);
-                if ("2.6.8".equals(info.versionName) && code == 150L) {
-                    new XbudRules(this).install(loader);
-                    new AggressiveAdRules(this, packageName).install(loader);
-                } else {
-                    log(Log.WARN, TAG, "Xbud version differs from inspected APK; skip rule and tracing disabled");
-                }
+                new XbudRules(this).install(loader);
+                new AggressiveAdRules(this, packageName).install(loader);
             }
-        } catch (android.content.pm.PackageManager.NameNotFoundException | RuntimeException | LinkageError error) {
+        } catch (RuntimeException | LinkageError error) {
             log(Log.WARN, TAG, "Cannot configure target: " + packageName, error);
         }
     }
@@ -145,6 +147,6 @@ public final class AdFreeModule extends XposedModule {
     }
 
     private static boolean isTarget(String packageName) {
-        return "run.xbud.android".equals(packageName) || "com.fiveplay".equals(packageName);
+        return TargetCatalog.find(packageName) != null;
     }
 }

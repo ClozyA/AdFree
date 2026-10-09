@@ -9,7 +9,7 @@ import java.lang.reflect.Method;
 
 import io.github.libxposed.api.XposedInterface;
 
-/** Rules for the statically inspected 5E 7.2.5 APK only. No reward hooks. */
+/** Rules derived from 5E 7.2.5; each hook validates its expected method signature. */
 final class FivePlayRules {
     private final XposedInterface framework;
 

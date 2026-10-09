@@ -4,8 +4,9 @@
     <string name="headline">应用与模块，一目了然。</string>
     <string name="subtitle">v%1$s</string>
     <string name="framework_title">连接概览</string>
-    <string name="framework_waiting_title">等待连接</string>
-    <string name="framework_ready_title">框架已连接</string>
+    <string name="framework_name">LSPosed</string>
+    <string name="framework_waiting_title">未连接</string>
+    <string name="framework_ready_title">已连接</string>
     <string name="framework_old_title">需要更新框架</string>
     <string name="framework_error_title">连接暂不可用</string>
     <string name="framework_waiting">启用模块后，框架信息会显示在这里。</string>
@@ -14,13 +15,7 @@
     <string name="framework_error">无法读取框架信息，可尝试刷新或重新打开。</string>
     <string name="framework_hint">应用作用域与加载记录可在 LSPosed 中查看。</string>
     <string name="targets_title">适配应用</string>
-    <string name="targets_caption">已配置的适配范围</string>
-    <string name="xbud_name">小步点</string>
-    <string name="xbud_detail">run.xbud.android</string>
-    <string name="xbud_version">2.6.8</string>
-    <string name="fiveplay_name">5E 对战平台</string>
-    <string name="fiveplay_detail">com.fiveplay</string>
-    <string name="fiveplay_version">7.2.5</string>
+    <string name="targets_caption">当前用户 · 安装版本与作用域</string>
     <string name="tools_title">常用工具</string>
     <string name="refresh">刷新连接</string>
     <string name="refreshed">连接状态已刷新</string>
@@ -28,5 +23,16 @@
     <string name="diagnostics_copied">环境信息已复制</string>
     <string name="environment">Android %1$s · SDK %2$d</string>
     <string name="footer">AdFree · 模块工作台</string>
-    <string name="scope_hint">适配版本与启用状态不同；请在框架管理器中设置作用域。</string>
+    <string name="scope_hint">启用需经框架授权。修改作用域后，请完全关闭并重新打开目标应用。</string>
+    <string name="app_loading">读取中</string>
+    <string name="app_missing">未安装</string>
+    <string name="app_read_error">无法读取应用</string>
+    <string name="version_matched">版本匹配</string>
+    <string name="version_mismatch">版本不同 · 继续适配</string>
+    <string name="installed_version">已安装 %1$s（%2$d）</string>
+    <string name="version_warning">已验证 %1$s（%2$d）；仍尝试注入，效果可能不同。</string>
+    <string name="scope_pending">正在等待框架处理…</string>
+    <string name="scope_unavailable">连接框架后可管理作用域</string>
+    <string name="scope_enabled">已加入作用域</string>
+    <string name="scope_disabled">未加入作用域</string>
 </resources>
