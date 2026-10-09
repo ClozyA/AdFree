@@ -1,7 +1,6 @@
 <resources>
     <string name="app_name">AdFree</string>
     <string name="module_description">应用适配与模块管理</string>
-    <string name="headline">应用与模块，一目了然。</string>
     <string name="subtitle">v%1$s</string>
     <string name="framework_title">连接概览</string>
     <string name="framework_name">LSPosed</string>
@@ -13,17 +12,13 @@
     <string name="framework_connected">%1$s %2$s\nAPI %3$d</string>
     <string name="framework_old">%1$s %2$s · API %3$d\n此模块需要 API 102 或更高版本。</string>
     <string name="framework_error">无法读取框架信息，可尝试刷新或重新打开。</string>
-    <string name="framework_hint">应用作用域与加载记录可在 LSPosed 中查看。</string>
     <string name="targets_title">适配应用</string>
-    <string name="targets_caption">当前用户 · 安装版本与作用域</string>
     <string name="tools_title">常用工具</string>
     <string name="refresh">刷新连接</string>
     <string name="refreshed">连接状态已刷新</string>
     <string name="copy_diagnostics">复制环境信息</string>
     <string name="diagnostics_copied">环境信息已复制</string>
     <string name="environment">Android %1$s · SDK %2$d</string>
-    <string name="footer">AdFree · 模块工作台</string>
-    <string name="scope_hint">启用需经框架授权。修改作用域后，请完全关闭并重新打开目标应用。</string>
     <string name="app_loading">读取中</string>
     <string name="app_missing">未安装</string>
     <string name="app_read_error">无法读取应用</string>

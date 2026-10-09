@@ -166,7 +166,6 @@ private fun Dashboard(
         topBar = {
             TopAppBar(
                 title = stringResource(R.string.app_name),
-                subtitle = stringResource(R.string.headline),
                 actions = {
                     Text(stringResource(R.string.subtitle, BuildConfig.VERSION_NAME),
                         color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
@@ -199,13 +198,11 @@ private fun Dashboard(
                         Text(state.framework.details(), color = frameworkContent.copy(alpha = 0.88f),
                             fontSize = 15.sp, lineHeight = 23.sp)
                     }
-                    Spacer(Modifier.height(16.dp))
                 }
                 SectionHeading(stringResource(R.string.targets_title))
                 Card(Modifier.fillMaxWidth(), insideMargin = PaddingValues(24.dp)) {
-                    Caption(stringResource(R.string.targets_caption))
                     state.targets.forEachIndexed { index, target ->
-                        Spacer(Modifier.height(if (index == 0) 20.dp else 28.dp))
+                        if (index > 0) Spacer(Modifier.height(28.dp))
                         TargetRow(target, state, healthy, warning, danger, onScope)
                     }
                 }
@@ -219,8 +216,6 @@ private fun Dashboard(
                 Spacer(Modifier.height(28.dp))
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Caption(stringResource(R.string.environment, Build.VERSION.RELEASE, Build.VERSION.SDK_INT))
-                    Spacer(Modifier.height(6.dp))
-                    Caption(stringResource(R.string.footer))
                 }
             }
         }
@@ -252,6 +247,8 @@ private fun TargetRow(
             enabled = state.framework.connected() && state.scope.available() &&
                 state.scope.pending().isEmpty() &&
                 (installed.state == InstallState.INSTALLED || scoped),
+            modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                .semantics { contentDescription = "${installed.label}作用域" },
         )
     }
     Spacer(Modifier.height(12.dp))

@@ -45,7 +45,7 @@ $env:ANDROID_HOME = '你的 Android SDK 目录'
 
 ```powershell
 ./gradlew.ps1 :app:assembleRelease :app:assembleDebug
-./scripts/package.ps1 -Version 0.9.0
+./scripts/package.ps1 -Version 0.10.0
 ```
 
 产物位于 `dist/`，包含 Release、Debug 和 `SHA256SUMS`。Release 启用 R8 和资源裁剪，缺少签名配置会阻止发布打包。
@@ -60,8 +60,8 @@ GitHub Secrets 需配置：
 更新 `app/build.gradle.kts` 的 `versionCode` 和 `versionName`，可在 `docs/releases/<版本>.md` 编写说明，然后推送匹配的版本标签：
 
 ```powershell
-git tag v0.9.0
-git push origin v0.9.0
+git tag v0.10.0
+git push origin v0.10.0
 ```
 
 工作流在 Windows / PowerShell 7 中运行单元测试、lint、两种构建、签名验证和 SHA-256 计算，然后发布两种 APK。Android 17 的 SDK 平台包名为 `platforms;android-37.0`。也支持在 GitHub 创建已发布的 Release，或从主分支手动运行工作流并输入已有版本标签。
